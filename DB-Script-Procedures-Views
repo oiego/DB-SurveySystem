@@ -1,0 +1,459 @@
+/*	SCRIPT ENCUESTAS© BY Pedro De León, Diego Meneses, Alberto Tapia, Vicente Linares.
+	COPYRIGHT 2019 ALL RIGHTS RESERVED  */
+GO
+
+-- DATABASE --
+CREATE DATABASE encuestas;
+GO
+
+USE encuestas;
+GO
+-- DROP DATABASE encuestas; --> ¡ONLY IN CASE NECESSARY NECESSARY NECESSARY! <---
+
+-- CREATE TABLES --
+-- user --
+CREATE TABLE usuario(
+idUsuario INT IDENTITY(1,1) PRIMARY KEY,
+nombre VARCHAR(45) NOT NULL,
+primerApellido VARCHAR(45) NOT NULL,
+segundoApellido VARCHAR(45) NOT NULL
+);
+-- DROP TABLE usuario;
+GO
+
+-- user account --
+CREATE TABLE cuenta(
+idCuenta INT IDENTITY(1,1) PRIMARY KEY,
+correo VARCHAR(60) NOT NULL,
+contrasena VARCHAR(60) NOT NULL,
+idUsuario INT NOT NULL,
+FOREIGN KEY(idUsuario) 
+REFERENCES usuario(idUsuario)
+ON DELETE CASCADE
+);
+-- DROP TABLE cuenta;
+GO
+
+-- survey --
+CREATE TABLE encuesta(
+idEncuesta INT IDENTITY(1,1) PRIMARY KEY,
+nombre VARCHAR(65) NOT NULL,
+descripcion VARCHAR(500) NOT NULL,
+idCuenta INT NOT NULL,
+FOREIGN KEY(idCuenta) 
+REFERENCES cuenta(idCuenta)
+ON DELETE CASCADE
+);
+-- DROP TABLE encuesta;
+GO
+
+-- account completes survey --
+CREATE TABLE cuentaContestaEncuesta(
+idCuentaEncuesta INT IDENTITY(1,1) PRIMARY KEY,
+idCuenta INT NOT NULL,
+idEncuesta INT NOT NULL,
+FECHA DATE NOT NULL,
+FOREIGN KEY (idCuenta) 
+REFERENCES cuenta(idCuenta)
+ON DELETE NO ACTION,
+FOREIGN KEY (idEncuesta) 
+REFERENCES encuesta(idEncuesta)
+ON DELETE NO ACTION
+);
+-- DROP TABLE cuentaContestaEncuesta;
+GO
+
+-- kind of anwers --
+CREATE TABLE tipoRespuesta(
+idTipoRespuesta INT IDENTITY(1,1) PRIMARY KEY,
+descripcion VARCHAR(500) NOT NULL
+);
+--DROP TABLE tipoRespuesta;
+GO
+
+-- question --
+CREATE TABLE pregunta(
+idPregunta INT IDENTITY(1,1) PRIMARY KEY,
+descripcion VARCHAR(500) NOT NULL,
+idEncuesta INT NOT NULL,
+idTipoRespuesta INT NOT NULL,
+FOREIGN KEY(idEncuesta) 
+REFERENCES encuesta(idEncuesta)
+ON DELETE CASCADE,
+FOREIGN KEY(idTipoRespuesta) 
+REFERENCES tipoRespuesta(idTipoRespuesta)
+ON DELETE NO ACTION
+);
+-- DROP TABLE pregunta;
+GO
+
+-- open answer --
+CREATE TABLE respuestaAbierta(
+idRespuestaAbierta INT IDENTITY(1,1) PRIMARY KEY,
+descripcion VARCHAR(500) NOT NULL,
+idPregunta INT NOT NULL,
+idCuentaEncuesta INT NOT NULL,
+FOREIGN KEY(idPregunta) 
+REFERENCES pregunta(idPregunta)
+ON DELETE CASCADE,
+FOREIGN KEY(idCuentaEncuesta) 
+REFERENCES cuentaContestaEncuesta(idCuentaEncuesta)
+ON DELETE NO ACTION
+);
+-- DROP TABLE respuestaAbierta;
+GO
+
+-- multiple choices --
+CREATE TABLE opcionMultiple(
+idOpcionMultiple INT IDENTITY(1,1) PRIMARY KEY,
+descripcion VARCHAR(500) NOT NULL,
+idPregunta INT NOT NULL,
+FOREIGN KEY(idPregunta) 
+REFERENCES pregunta(idPregunta)
+ON DELETE CASCADE
+);
+-- DROP TABLE opcionMultiple;
+GO
+
+-- multiple answers --
+CREATE TABLE respuestaMultiple(
+idRespuestaMultiple INT IDENTITY(1,1) PRIMARY KEY,
+idOpcionMultiple INT NOT NULL,
+idCuentaEncuesta INT NOT NULL,
+FOREIGN KEY(idOpcionMultiple) 
+REFERENCES opcionMultiple(idOpcionMultiple)
+ON DELETE CASCADE,
+FOREIGN KEY(idCuentaEncuesta) 
+REFERENCES cuentaContestaEncuesta(idCuentaEncuesta)
+ON DELETE NO ACTION
+);
+-- DROP TABLE respuestaMultiple;
+GO
+
+-- INSERT TO TABLES --
+INSERT INTO usuario VALUES('Pedro', 'De León', 'Bahena'), 
+						  ('Diego', 'Meneses', 'Trujillo'),
+						  ('Luis Alberto','Tapia','Castrejón'),
+						  ('Vicente Israel','Cruz','Linares');
+SELECT * FROM usuario;
+GO
+
+
+INSERT INTO cuenta VALUES ('pedro@gmail.com','elpedro123',1),
+						  ('diego@gmail.com','eldiego123',2),
+						  ('luisAl@gmail.com','elalberto123',3),
+						  ('vicenteIs@gmail.com','elvicente123',4);
+SELECT * FROM cuenta;
+GO
+
+INSERT INTO encuesta VALUES ('censo', 'una encuesta para el sondeo de la población en el estado de morelos', 2);
+
+SELECT * FROM encuesta;
+GO
+
+INSERT INTO cuentaContestaEncuesta VALUES (1,1, '2019-02-07'),
+										  (3,1, '2019-02-06'),
+										  (4,1, '2019-02-05');
+SELECT * FROM cuentaContestaEncuesta;
+GO
+
+INSERT INTO tipoRespuesta VALUES ('Opción Multiple'),
+								 ('Abierta'),
+								 ('Opción Multiple'),
+								 ('Abierta');
+SELECT * FROM tipoRespuesta;
+GO
+
+INSERT INTO pregunta VALUES ('¿Cuántos integrantes son en tu familia?', 1, 1),
+							('¿Cuántos años tienes?',1,2),
+							('¿Vives con tus padres?',1,3),
+							('¿Cómo consideras la seguridad en tu comunidad?',1,4);
+SELECT * FROM pregunta;
+GO
+
+INSERT INTO respuestaAbierta VALUES ('20 años', 2, 1),('La considero ineficiente', 4, 1);
+INSERT INTO respuestaAbierta VALUES('21 años',2,1),('La considero mala',4,1);
+INSERT INTO respuestaAbierta VALUES('22 años',2,1),('La considero buena',4,1);
+
+SELECT * FROM respuestaAbierta;
+GO
+
+INSERT INTO opcionMultiple VALUES ('Si', 1), ('No',3);
+INSERT INTO opcionMultiple VALUES ('No', 1), ('Si',3);
+INSERT INTO opcionMultiple VALUES ('Ambos', 1), ('Si',3);
+
+SELECT * FROM opcionMultiple;
+GO
+
+INSERT INTO respuestaMultiple VALUES (1,1), (2,1), (3,1),(4,1),(5,1),(6,1);
+go
+
+SELECT * FROM respuestaMultiple;
+go
+
+-- ALL FUNCTIONS --
+-- TO DO --
+go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- 1.- PROCEDIMIENTOS de creacion, actualizacion y eliminación PARA TABLA usuario
+CREATE PROCEDURE usuarioRegistro @nombre VARCHAR(45), @primerApellido VARCHAR(45), @segundoApellido VARCHAR(45)
+AS
+INSERT INTO usuario (nombre, primerApellido, segundoApellido) VALUES(@nombre, @primerApellido, @segundoApellido);
+GO
+
+CREATE PROCEDURE usuarioActualizacion @idUsuario INT, @nombre VARCHAR(45), @primerApellido VARCHAR(45), @segundoApellido VARCHAR(45)
+AS
+UPDATE usuario SET nombre = @nombre, primerApellido = @primerApellido, segundoApellido = @segundoApellido WHERE idUsuario = @idUsuario;
+GO
+
+CREATE PROCEDURE usuarioEliminacion @idUsuario INT
+AS
+DELETE FROM usuario WHERE idUsuario = @idUsuario;
+GO
+
+-- 2.- PROCEDIMIENTOS de creacion, actualizacion y eliminación PARA TABLA cuenta
+CREATE PROCEDURE cuentaRegistro @correo VARCHAR(45), @contrasena VARCHAR(45), @idUsuario INT
+AS
+INSERT INTO cuenta (correo, contrasena, idUsuario) VALUES(@correo, @contrasena, @idUsuario)
+GO
+
+CREATE PROCEDURE cuentaActualizacion @idCuenta INT, @correo VARCHAR(45), @contrasena VARCHAR(45), @idUsuario INT
+AS
+UPDATE cuenta SET correo = @correo, contrasena = @contrasena, idUsuario = @idUsuario WHERE idCuenta = @idCuenta
+GO
+
+CREATE PROCEDURE cuentaEliminacion @idCuenta INT
+AS
+DELETE cuenta WHERE idCuenta = @idCuenta
+GO
+-- PRUEBA
+/*
+exec cuentaRegistro 'diego@sadsa.com', '123', '1' 
+exec cuentaActualizacion 1, 'correo2', '111', '1' 
+exec cuentaEliminacion 5
+select * from cuenta
+GO
+*/
+
+-- 3.- PROCEDIMIENTOS de creacion, actualizacion y eliminación PARA TABLA encuesta
+CREATE PROCEDURE encuestaRegistro @nombre VARCHAR(65), @descripcion VARCHAR(500), @idCuenta INT
+AS
+INSERT INTO encuesta (nombre, descripcion, idCuenta) VALUES(@nombre, @descripcion, @idCuenta)
+GO
+
+CREATE PROCEDURE encuestaActualizacion @idEncuesta INT, @nombre varchar(65), @descripcion varchar(500), @idCuenta INT
+AS
+UPDATE encuesta SET nombre = @nombre, descripcion = @descripcion, idCuenta = @idCuenta WHERE idEncuesta = @idEncuesta
+GO
+
+CREATE PROCEDURE encuestaEliminacion @idEncuesta INT
+AS
+DELETE encuesta WHERE idEncuesta = @idEncuesta 
+GO
+-- PRUEBA
+/*
+exec encuestaRegistro 'encuesta1', 'Encuesta prueba', '1' 
+exec encuestaActualizacion 2, 'encuestaNueva', 'Encuesta prueba', '1' 
+exec encuestaEliminacion 2
+select * from encuesta
+GO
+*/
+
+-- 4.- PROCEDIMIENTOS de creacion, actualizacion y eliminación PARA TABLA pregunta
+CREATE PROCEDURE preguntaRegistro @descripcion VARCHAR(500), @idEncuesta INT, @idTipoRespuesta INT
+AS
+INSERT INTO pregunta(descripcion, idEncuesta, idTipoRespuesta) VALUES(@descripcion, @idEncuesta, @idTipoRespuesta)
+GO
+
+CREATE PROCEDURE preguntaActualizacion @idPregunta INT, @descripcion VARCHAR(500), @idEncuesta INT, @idTipoRespuesta INT
+AS
+UPDATE pregunta SET descripcion = @descripcion, idEncuesta = @idEncuesta, idTipoRespuesta = @idTipoRespuesta Where idPregunta = @idPregunta
+GO
+
+CREATE PROCEDURE preguntaEliminacion @idPregunta INT
+AS
+DELETE pregunta WHERE idPregunta = @idPregunta
+GO
+-- PRUEBA
+/*
+exec preguntaRegistro '¡que edad tienes?', '1', '1' 
+exec preguntaActualizacion 5, '¿Qué mascotas tienes?', 1, 1
+exec preguntaEliminacion 2
+select * from pregunta
+GO
+*/
+
+
+
+
+-- 5.- Procedimientos ingreso, modificacion de tabla !!!!opcionMultiple!!!!--
+
+create procedure opcionMultipleRegistro @descrip varchar(9), @pregunta int 
+as
+	insert into opcionMultiple(descripcion, idPregunta) values(@descrip, @pregunta );
+go
+exec opcionMultipleRegistro 'Tal vez', 1; 
+go
+
+create procedure opcionMultipleModificar @id int, @descrip varchar(20), @pregunta int 
+as
+	update opcionMultiple set descripcion=@descrip, idPregunta=@pregunta where idOpcionMultiple=@id;
+go
+exec opcionMultipleModificar 3,'Ahora no', 1;
+go
+
+create procedure opcionMultipleEliminar @id int
+as
+	delete from opcionMultiple where idOpcionMultiple=@id;
+go
+
+
+-- pruebas
+/*
+exec opcionMultipleEliminar 6;
+go
+INSERT INTO opcionMultiple VALUES ('Si', 1), ('No',3);
+INSERT INTO opcionMultiple VALUES ('No', 1), ('Si',3);
+INSERT INTO opcionMultiple VALUES ('Ambos', 1), ('Si',3);
+
+SELECT * FROM opcionMultiple;
+GO
+*/
+
+
+-- 6.- Procedimientos ingreso, modificacion de tabla !!!!cuentaContestaEncuesta!!!!--
+
+create procedure cuentaContestaEncuestaRegistro @idCuen int, @idEncu int, @fecha date
+as
+	insert into cuentaContestaEncuesta (idCuenta, idEncuesta, fecha) values (@idCuen, @idEncu, @fecha);
+go
+
+create procedure cuentaContestaEncuestaModificar @id int, @idCuen int, @idEncu int, @fecha date 
+as
+	update cuentaContestaEncuesta set idCuenta=@idCuen, idEncuesta=@idEncu, FECHA=@fecha where idCuentaEncuesta=@id;
+go
+
+create procedure cuentaContestaEncuestaEliminar @id int
+as
+	delete cuentaContestaEncuesta where idCuentaEncuesta = @id;
+go
+
+
+
+-- pruebas
+/*
+INSERT INTO cuentaContestaEncuesta VALUES (1,1, '2019-02-07'),
+										  (3,1, '2019-02-06'),
+										  (4,1, '2019-02-05');
+SELECT * FROM cuentaContestaEncuesta;
+GO
+exec cuentaContestaEncuestaRegistro 1,1, '2020-01-17';
+go
+exec cuentaContestaEncuestaModificar 3, 3,1,'2030-01-17';
+go
+exec cuentaContestaEncuestaEliminar 2
+go
+*/
+
+-- 7.- Procedimientos ingreso, modificacion de tabla !!!!respuestaAbierta!!!!--
+create procedure respuestaAbiertaRegistro @descrip varchar(100), @idPre int , @idCueEnc int
+as
+	insert into respuestaAbierta (descripcion, idPregunta, idCuentaEncuesta) values (@descrip, @idPre, @idCueEnc);
+go
+
+create procedure respuestaAbiertaModificar @id int,@descrip varchar(100), @idPre int , @idCueEnc int
+as
+	update respuestaAbierta set descripcion=@descrip, idPregunta=@idPre, idCuentaEncuesta=@idCueEnc where idRespuestaAbierta=@id;
+go
+
+create procedure respuestaAbiertaEliminar @id int
+as
+	delete respuestaAbierta where idRespuestaAbierta = @id;
+go
+
+
+-- pruebas 
+/*
+INSERT INTO respuestaAbierta VALUES ('20 años', 1, 1),('La considero ineficiente', 4, 1);
+INSERT INTO respuestaAbierta VALUES('21 años',2,1),('La considero mala',4,1);
+INSERT INTO respuestaAbierta VALUES('22 años',2,1),('La considero buena',4,1);
+SELECT * FROM respuestaAbierta;
+GO
+exec respuestaAbiertaRegistro 'No se que considerar', 4,1;
+go
+exec respuestaAbiertaModificar 3, '40 añitos', 2, 1;
+go
+exec respuestaAbiertaEliminar 5
+go
+*/
+
+-- 8.- Procedimientos ingreso, modificacion de tabla !!!!respuestaMultiple!!!!--
+create procedure respuestaMultipleRegistro @idOpc int, @idCueEnc int
+as
+	insert respuestaMultiple (idOpcionMultiple, idCuentaEncuesta) values (@idOpc, @idCueEnc);
+go
+
+create procedure respuestaMultipleModificar @id int, @idOpc int, @idCueEnc int
+as
+	update respuestaMultiple set idOpcionMultiple=@idOpc, idCuentaEncuesta=@idCueEnc where idRespuestaMultiple=@id;
+go
+
+create procedure respuestaMultipleEliminar @id int 
+as
+	DELETE respuestaMultiple where idRespuestaMultiple = @id ;
+go
+
+-- Pruebas  
+/*
+INSERT INTO respuestaMultiple VALUES (1,1), (2,1), (3,1),(4,1),(5,1),(6,1);
+SELECT * FROM respuestaMultiple;
+go
+exec respuestaMultipleRegistro 4,1;
+go
+exec respuestaMultipleModificar 3,4,1;
+go
+exec respuestaMultipleEliminar 7
+GO
+*/
+
+
+
+
+-- 11.- VISTA que devuelve el usuario que ha creado m{as encuestas
+CREATE VIEW usuarioMasEncuestas 
+AS
+
+SELECT u.nombre, COUNT(u.nombre) AS [Número de Encuestas] FROM usuario u join cuenta c ON u.idUsuario = c.idUsuario 
+	JOIN encuesta e ON e.idCuenta = c.idCuenta GROUP BY u.nombre HAVING COUNT(u.nombre) = (
+		SELECT MAX(u.nombre) FROM usuario u join cuenta c ON u.idUsuario = c.idUsuario 
+	JOIN encuesta e ON e.idCuenta = c.idCuenta GROUP BY u.nombre)
+GO
+
+
+
